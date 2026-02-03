@@ -1,0 +1,26 @@
+# CROT DALAM v2.0 Requirements
+# TikTok OSINT Tool with Anti-Detection and GUI
+
+# Core dependencies
+playwright>=1.40.0
+typer>=0.9.0
+rich>=13.0.0
+requests>=2.31.0
+
+# GUI dependencies
+flask>=3.0.0
+flask-cors>=4.0.0
+flask-socketio>=5.3.0
+
+# Optional: Real-time communication
+python-socketio>=5.10.0
+eventlet>=0.33.0
+
+# Optional: Video downloads
+# yt-dlp (install separately: pip install yt-dlp or via system package manager)
+
+# Development dependencies (optional)
+# pytest>=7.4.0
+# pytest-asyncio>=0.21.0
+# black>=23.0.0
+# flake8>=6.0.0
