@@ -344,14 +344,14 @@ class TikTokScraper:
         url = f"https://www.tiktok.com/search?q={encoded_query}"
         
         try:
-            self._page.goto(url, wait_until="domcontentloaded")
-            self.antidetect.human_delay(1.0, 0.3)
+            self._page.goto(url, wait_until="domcontentloaded", timeout=30000)
+            self.antidetect.human_delay(0.5, 0.2)  # Reduced from 1.0
             
             self._accept_cookies(self._page)
             self._close_popups(self._page)
             
             # Wait for content to load
-            self.antidetect.human_delay(1.5, 0.5)
+            self.antidetect.human_delay(0.8, 0.3)  # Reduced from 1.5
             
             urls = self._scroll_and_collect(self._page, limit)
             rprint(f"[cyan]Collected[/cyan] {len(urls)} video URLs for query: [bold]{query}[/bold]")
@@ -419,8 +419,8 @@ class TikTokScraper:
     def extract_video_metadata(self, url: str) -> Optional[VideoRecord]:
         """Extract complete metadata from a video page."""
         try:
-            self._page.goto(url, wait_until="domcontentloaded")
-            self.antidetect.human_delay(0.8, 0.3)
+            self._page.goto(url, wait_until="domcontentloaded", timeout=20000)
+            self.antidetect.human_delay(0.4, 0.2)  # Reduced from 0.8
             
             self._accept_cookies(self._page)
             self._close_popups(self._page)
@@ -654,9 +654,9 @@ class TikTokScraper:
                 urls = self.search_videos(keyword, self.config.limit)
                 all_urls.extend(urls)
                 
-                # Polite pause between searches
+                # Polite pause between searches (reduced for performance)
                 if self.config.antidetect_enabled:
-                    self.antidetect.human_delay(2.0, 0.5)
+                    self.antidetect.human_delay(1.0, 0.3)  # Reduced from 2.0
             
             # Hashtag pivoting
             if self.config.pivot_hashtags > 0:
@@ -731,9 +731,9 @@ class TikTokScraper:
                     if self.progress_callback:
                         self.progress_callback("processing", idx, len(final_urls))
                     
-                    # Polite delay
+                    # Polite delay (reduced for performance)
                     if self.config.antidetect_enabled:
-                        self.antidetect.human_delay(0.5, 0.2)
+                        self.antidetect.human_delay(0.3, 0.1)  # Reduced from 0.5
             
             # Export results
             exporter = Exporter(self.config.output_base)

@@ -21,8 +21,10 @@ class Exporter:
     """Multi-format exporter for CROT DALAM results."""
     
     def __init__(self, base_path: str = "out/crot_dalam"):
-        self.base_path = Path(base_path)
+        self.base_path = Path(base_path).resolve()
+        # Ensure output directory exists
         self.base_path.parent.mkdir(parents=True, exist_ok=True)
+        print(f"[Exporter] Output base: {self.base_path}")
     
     def export_all(
         self,
@@ -75,9 +77,16 @@ class Exporter:
     ) -> Path:
         """Export to styled HTML report."""
         path = self.base_path.with_suffix(".html")
-        html_content = self._generate_html_report(records, keywords, mode)
-        with open(path, "w", encoding="utf-8") as f:
-            f.write(html_content)
+        try:
+            html_content = self._generate_html_report(records, keywords, mode)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(html_content)
+            print(f"[Exporter] HTML report saved: {path}")
+        except Exception as e:
+            print(f"[Exporter] HTML export error: {e}")
+            # Create minimal report on failure
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(f"<html><body><h1>CROT DALAM Report</h1><p>Error: {e}</p></body></html>")
         return path
     
     def _generate_html_report(

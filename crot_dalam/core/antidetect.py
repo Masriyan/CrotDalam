@@ -565,17 +565,17 @@ def create_antidetect(
     """Create an AntiDetect instance with common configurations."""
     if aggressive:
         return AntiDetect(
-            min_delay=1.0,
-            max_delay=5.0,
-            mouse_speed=0.5,
+            min_delay=0.5,  # Reduced from 1.0
+            max_delay=3.0,  # Reduced from 5.0
+            mouse_speed=0.7,
             enable_fingerprint_rotation=True,
             proxy_list=proxy_list,
         )
     else:
         return AntiDetect(
-            min_delay=0.3,
-            max_delay=2.0,
-            mouse_speed=1.0,
+            min_delay=0.1,  # Reduced from 0.3
+            max_delay=1.0,  # Reduced from 2.0
+            mouse_speed=1.5,
             enable_fingerprint_rotation=False,
             proxy_list=proxy_list,
         )
