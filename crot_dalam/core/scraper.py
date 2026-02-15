@@ -9,6 +9,8 @@ from __future__ import annotations
 import re
 import time
 import uuid
+import functools
+import threading
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -36,6 +38,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskPr
 from crot_dalam.core.antidetect import AntiDetect, create_antidetect
 from crot_dalam.core.risk_analyzer import RiskAnalyzer, SentimentAnalyzer
 from crot_dalam.core.exporters import Exporter
+from crot_dalam.core.captcha_solver import CaptchaSolver, create_captcha_solver, CaptchaType
 from crot_dalam.models.data import (
     VideoRecord,
     UserProfile,
@@ -55,6 +58,37 @@ _VIDEO_URL_RE = re.compile(r"/(@[^/]+)/video/(\d+)")
 
 # Counter suffix parsing
 _KSUFFIX = {"k": 1_000, "K": 1_000, "m": 1_000_000, "M": 1_000_000, "b": 1_000_000_000, "B": 1_000_000_000}
+
+
+# -------------------------------------------------------------------------
+# Retry Decorator with Exponential Backoff
+# -------------------------------------------------------------------------
+
+def _retry_with_backoff(
+    max_retries: int = 3,
+    base_delay: float = 1.0,
+    max_delay: float = 15.0,
+    exceptions: tuple = (Exception,),
+):
+    """Decorator for retry with exponential backoff."""
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            last_exception = None
+            for attempt in range(max_retries + 1):
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as e:
+                    last_exception = e
+                    if attempt == max_retries:
+                        raise
+                    delay = min(base_delay * (2 ** attempt), max_delay)
+                    delay += delay * (0.5 * (2 * __import__('random').random() - 1))  # jitter
+                    rprint(f"[yellow]Retry {attempt + 1}/{max_retries} after {delay:.1f}s: {e}[/yellow]")
+                    time.sleep(delay)
+            raise last_exception
+        return wrapper
+    return decorator
 
 
 class TikTokScraper:
@@ -82,11 +116,19 @@ class TikTokScraper:
         self.risk_analyzer = risk_analyzer or RiskAnalyzer()
         self.progress_callback = progress_callback
         
+        # CAPTCHA solver integration
+        self.captcha_solver = CaptchaSolver(antidetect=self.antidetect)
+        
         # Runtime state
         self._browser: Optional[Browser] = None
         self._context: Optional[BrowserContext] = None
         self._page: Optional[Page] = None
         self._playwright = None
+        self._stop_requested = False
+        
+        # Circuit breaker state
+        self._consecutive_failures = 0
+        self._max_consecutive_failures = 5
         
         # Results
         self._collected: List[VideoRecord] = []
@@ -136,6 +178,37 @@ class TikTokScraper:
         self.antidetect.apply_session(self._context, session_id)
         
         self._page = self._context.new_page()
+    
+    def _navigate_with_captcha(
+        self, page: Page, url: str,
+        wait_until: str = "domcontentloaded",
+        timeout: int = 30000,
+    ) -> None:
+        """Navigate to URL with CAPTCHA detection and retry."""
+        page.goto(url, wait_until=wait_until, timeout=timeout)
+        self.antidetect.human_delay(0.5, 0.2)
+        
+        # Check for CAPTCHA
+        captcha_result = self.captcha_solver.handle_captcha(page)
+        if captcha_result.detected and not captcha_result.solved:
+            # CAPTCHA detected but not solved — try navigating again after identity rotation
+            rprint("[yellow]Rotating identity after CAPTCHA detection...[/yellow]")
+            self.antidetect.rotate_identity()
+            time.sleep(2.0)
+            page.goto(url, wait_until=wait_until, timeout=timeout)
+            self.captcha_solver.handle_captcha(page)
+    
+    def _handle_circuit_breaker(self, success: bool) -> None:
+        """Track consecutive failures and rotate identity if threshold reached."""
+        if success:
+            self._consecutive_failures = 0
+        else:
+            self._consecutive_failures += 1
+            if self._consecutive_failures >= self._max_consecutive_failures:
+                rprint("[bold yellow]⚡ Circuit breaker triggered — rotating identity[/bold yellow]")
+                self.antidetect.rotate_identity()
+                self._consecutive_failures = 0
+                time.sleep(3.0)
     
     def _close_browser(self) -> None:
         """Close browser and save session."""
@@ -299,16 +372,26 @@ class TikTokScraper:
         last_height = 0
         stale_count = 0
         
-        while len(seen) < limit and stale_count < 5:
-            # Collect video links
-            try:
-                anchors = page.locator('a[href*="/video/"]').evaluate_all(
-                    "elements => elements.map(e => e.href)"
-                )
-            except Exception:
-                anchors = []
+        # Multiple selector strategies for collecting video links
+        video_selectors = [
+            'a[href*="/video/"]',
+            'div[data-e2e="search_top-item"] a',
+            'div[class*="DivItemContainer"] a',
+        ]
+        
+        while len(seen) < limit and stale_count < 7:  # Increased stale tolerance
+            # Collect video links with multiple selector fallback
+            anchors = []
+            for sel in video_selectors:
+                try:
+                    found = page.locator(sel).evaluate_all(
+                        "elements => elements.map(e => e.href)"
+                    )
+                    anchors.extend(found or [])
+                except Exception:
+                    continue
             
-            for href in anchors or []:
+            for href in anchors:
                 if "/video/" in href and re.search(_VIDEO_URL_RE, href):
                     seen[href] = None
                     if len(seen) >= limit:
@@ -327,43 +410,79 @@ class TikTokScraper:
                 new_height = page.evaluate("document.body.scrollHeight")
                 if new_height == last_height:
                     stale_count += 1
+                    
+                    # Enhanced stagnation recovery
+                    if stale_count == 3:
+                        # Try keyboard End key
+                        try:
+                            page.keyboard.press("End")
+                            time.sleep(1.0)
+                        except Exception:
+                            pass
+                    elif stale_count == 5:
+                        # Try scrolling to a specific position
+                        try:
+                            page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                            time.sleep(1.5)
+                        except Exception:
+                            pass
                 else:
                     stale_count = 0
                 last_height = new_height
             except Exception:
                 stale_count += 1
             
+            # Check for CAPTCHA during scrolling
+            if stale_count > 0 and stale_count % 2 == 0:
+                self.captcha_solver.handle_captcha(page)
+            
             # Track action for anti-detection
             self.antidetect.track_action()
         
         return list(seen.keys())
     
+    @_retry_with_backoff(max_retries=2, base_delay=2.0)
     def search_videos(self, query: str, limit: int) -> List[str]:
-        """Search TikTok and collect video URLs."""
+        """Search TikTok and collect video URLs with retry."""
         encoded_query = requests.utils.quote(query)
-        url = f"https://www.tiktok.com/search?q={encoded_query}"
         
-        try:
-            self._page.goto(url, wait_until="domcontentloaded", timeout=30000)
-            self.antidetect.human_delay(0.5, 0.2)  # Reduced from 1.0
-            
-            self._accept_cookies(self._page)
-            self._close_popups(self._page)
-            
-            # Wait for content to load
-            self.antidetect.human_delay(0.8, 0.3)  # Reduced from 1.5
-            
-            urls = self._scroll_and_collect(self._page, limit)
-            rprint(f"[cyan]Collected[/cyan] {len(urls)} video URLs for query: [bold]{query}[/bold]")
-            return urls
-            
-        except PWTimeout as e:
-            rprint(f"[yellow]Timeout during search: {e}[/yellow]")
-            return []
-        except Exception as e:
-            rprint(f"[red]Error during search: {e}[/red]")
-            self._errors.append({"type": "search", "query": query, "error": str(e)})
-            return []
+        # Multiple search URL formats for resilience
+        search_urls = [
+            f"https://www.tiktok.com/search?q={encoded_query}",
+            f"https://www.tiktok.com/search/video?q={encoded_query}",
+        ]
+        
+        for url in search_urls:
+            try:
+                self._navigate_with_captcha(self._page, url, timeout=30000)
+                
+                self._accept_cookies(self._page)
+                self._close_popups(self._page)
+                
+                # Wait for content to load
+                self.antidetect.human_delay(0.8, 0.3)
+                
+                urls = self._scroll_and_collect(self._page, limit)
+                
+                if urls:
+                    rprint(f"[cyan]Collected[/cyan] {len(urls)} video URLs for query: [bold]{query}[/bold]")
+                    self._handle_circuit_breaker(True)
+                    return urls
+                else:
+                    rprint(f"[yellow]No results from {url}, trying alternate...[/yellow]")
+                    continue
+                
+            except PWTimeout as e:
+                rprint(f"[yellow]Timeout during search: {e}[/yellow]")
+                continue
+            except Exception as e:
+                rprint(f"[red]Error during search: {e}[/red]")
+                self._errors.append({"type": "search", "query": query, "error": str(e)})
+                continue
+        
+        self._handle_circuit_breaker(False)
+        rprint(f"[yellow]No video URLs found for query: {query}[/yellow]")
+        return []
     
     # -------------------------------------------------------------------------
     # Video Metadata Extraction
@@ -419,8 +538,9 @@ class TikTokScraper:
     def extract_video_metadata(self, url: str) -> Optional[VideoRecord]:
         """Extract complete metadata from a video page."""
         try:
-            self._page.goto(url, wait_until="domcontentloaded", timeout=20000)
-            self.antidetect.human_delay(0.4, 0.2)  # Reduced from 0.8
+            self._navigate_with_captcha(
+                self._page, url, timeout=20000
+            )
             
             self._accept_cookies(self._page)
             self._close_popups(self._page)
@@ -506,9 +626,11 @@ class TikTokScraper:
             
         except PWTimeout as e:
             rprint(f"[yellow]Timeout on {url}: {e}[/yellow]")
+            self._handle_circuit_breaker(False)
         except Exception as e:
             rprint(f"[red]Error extracting {url}: {e}[/red]")
             self._errors.append({"type": "extract", "url": url, "error": str(e)})
+            self._handle_circuit_breaker(False)
         
         return None
     
@@ -521,8 +643,9 @@ class TikTokScraper:
         url = f"https://www.tiktok.com/@{username}"
         
         try:
-            self._page.goto(url, wait_until="domcontentloaded")
-            self.antidetect.human_delay(1.0, 0.3)
+            self._navigate_with_captcha(
+                self._page, url, timeout=20000
+            )
             
             self._accept_cookies(self._page)
             
@@ -599,7 +722,7 @@ class TikTokScraper:
             
             if result.returncode == 0:
                 rprint(f"[green]Downloaded:[/green] {url}")
-                return str(dl_dir)
+                return str(dl_dir.resolve())
             else:
                 rprint(f"[yellow]yt-dlp failed: {result.stderr}[/yellow]")
         except Exception as e:

@@ -169,6 +169,26 @@ class RiskAnalyzer:
                 ("small fee required", 2.0),
                 ("pay to claim", 2.5),
             ],
+            "romance_scam": [
+                ("i love you so much", 1.0),
+                ("send me money", 2.5),
+                ("help me please", 1.0),
+                ("i need your help", 1.0),
+                ("western union", 2.0),
+                ("gift card", 2.0),
+                ("itunes card", 2.0),
+                ("steam card", 1.5),
+                ("google play card", 1.5),
+            ],
+            "impersonation": [
+                ("official account", 1.0),
+                ("verified support", 1.5),
+                ("customer service", 1.0),
+                ("dm for support", 1.5),
+                ("tech support", 1.0),
+                ("account recovery", 2.0),
+                ("click to verify", 2.0),
+            ],
         },
         "malay": {
             "financial_scam": [
@@ -224,6 +244,50 @@ class RiskAnalyzer:
                 ("malaking kita", 1.5),
             ],
         },
+        "japanese": {
+            "financial_scam": [
+                ("無料プレゼント", 2.0),
+                ("当選しました", 2.5),
+                ("懸賞", 1.0),
+                ("手数料先払い", 3.0),
+                ("振込先", 1.5),
+                ("即金", 2.0),
+            ],
+            "investment_fraud": [
+                ("簡単に稼げる", 2.5),
+                ("確実に儲かる", 3.0),
+                ("高額報酬", 2.0),
+                ("副業", 1.0),
+                ("不労所得", 1.5),
+                ("投資詐欺", 2.5),
+            ],
+            "gambling": [
+                ("パチンコ", 1.0),
+                ("オンラインカジノ", 2.0),
+                ("スロット", 1.0),
+            ],
+        },
+        "korean": {
+            "financial_scam": [
+                ("무료 선물", 2.0),
+                ("당첨되었습니다", 2.5),
+                ("선불 수수료", 3.0),
+                ("계좌 이체", 1.5),
+                ("보이스피싱", 2.5),
+            ],
+            "investment_fraud": [
+                ("쉽게 돈 벌기", 2.5),
+                ("고수익 보장", 3.0),
+                ("원금 보장", 2.5),
+                ("부업", 1.0),
+                ("코인 투자", 1.5),
+            ],
+            "gambling": [
+                ("온라인 도박", 2.0),
+                ("토토사이트", 2.0),
+                ("카지노", 1.5),
+            ],
+        },
     }
     
     # Entity extraction patterns
@@ -233,11 +297,14 @@ class RiskAnalyzer:
         "btc_wallet": re.compile(r"\b(?:bc1|[13])[a-zA-HJ-NP-Z0-9]{25,39}\b"),
         "eth_wallet": re.compile(r"\b0x[0-9A-Fa-f]{40}\b"),
         "trx_wallet": re.compile(r"\bT[a-zA-Z0-9]{33}\b"),
+        "sol_wallet": re.compile(r"\b[1-9A-HJ-NP-Za-km-z]{32,44}\b"),
+        "bnb_wallet": re.compile(r"\bbnb1[a-z0-9]{38}\b"),
+        "doge_wallet": re.compile(r"\bD[5-9A-HJ-NP-U][1-9A-HJ-NP-Za-km-z]{32}\b"),
         "email": re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"),
         "telegram": re.compile(r"(?:t\.me/|@)([a-zA-Z0-9_]{5,32})", re.IGNORECASE),
         "whatsapp": re.compile(r"wa\.me/(\d+)", re.IGNORECASE),
         "url": re.compile(r"https?://[^\s\"'<>]+"),
-        "short_url": re.compile(r"\b(?:bit\.ly|tinyurl\.com|t\.co|goo\.gl|ow\.ly)/[a-zA-Z0-9]+", re.IGNORECASE),
+        "short_url": re.compile(r"\b(?:bit\.ly|tinyurl\.com|t\.co|goo\.gl|ow\.ly|rb\.gy|cutt\.ly|is\.gd)/[a-zA-Z0-9]+", re.IGNORECASE),
     }
     
     # Amplifier patterns (increase score significantly)
@@ -335,6 +402,12 @@ class RiskAnalyzer:
             entity_risk += 2
         if entities.get("trx_wallet"):
             entity_risk += 2
+        if entities.get("sol_wallet"):
+            entity_risk += 2
+        if entities.get("bnb_wallet"):
+            entity_risk += 2
+        if entities.get("doge_wallet"):
+            entity_risk += 1.5
         if entities.get("short_url"):
             entity_risk += 1.5
         if entities.get("telegram") or entities.get("whatsapp"):

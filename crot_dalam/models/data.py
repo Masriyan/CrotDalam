@@ -97,6 +97,9 @@ class VideoRecord:
         """Convert to JSON string."""
         return json.dumps(self.to_dict(), ensure_ascii=False)
     
+    def __repr__(self) -> str:
+        return f"VideoRecord(id={self.video_id!r}, user=@{self.username}, risk={self.risk_score}/{self.risk_level})"
+    
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "VideoRecord":
         """Create from dictionary."""
@@ -225,6 +228,7 @@ class ScanResult:
     total_videos: int = 0
     high_risk_count: int = 0
     medium_risk_count: int = 0
+    low_risk_count: int = 0
     
     # Timing
     started_at: Optional[str] = None
@@ -244,6 +248,7 @@ class ScanResult:
         self.total_videos = len(self.videos)
         self.high_risk_count = sum(1 for v in self.videos if v.risk_score >= 5)
         self.medium_risk_count = sum(1 for v in self.videos if 2 <= v.risk_score < 5)
+        self.low_risk_count = sum(1 for v in self.videos if v.risk_score < 2)
     
     def to_dict(self) -> Dict[str, Any]:
         return {

@@ -18,7 +18,7 @@ class Config:
     
     # General
     app_name: str = "CROT DALAM"
-    version: str = "2.0.0"
+    version: str = "3.0.0"
     debug: bool = False
     
     # Browser defaults

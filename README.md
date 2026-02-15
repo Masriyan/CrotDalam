@@ -2,22 +2,22 @@
   <img src="assets/banner.png" alt="CROT DALAM Banner" width="100%">
 </p>
 
-<h1 align="center">🔍 CROT DALAM v2.0</h1>
+<h1 align="center">🔍 CROT DALAM v3.0</h1>
 
 <p align="center">
   <strong>Collection & Reconnaissance Of TikTok — Discovery, Analysis, Logging, And Monitoring</strong>
 </p>
 
 <p align="center">
-  <a href="#-features"><img src="https://img.shields.io/badge/Features-6-blue?style=for-the-badge" alt="Features"></a>
+  <a href="#-features"><img src="https://img.shields.io/badge/Features-10-blue?style=for-the-badge" alt="Features"></a>
   <a href="#-quick-start"><img src="https://img.shields.io/badge/Quick_Start-CLI%20%7C%20GUI-green?style=for-the-badge" alt="Quick Start"></a>
-  <a href="#-anti--detection"><img src="https://img.shields.io/badge/Anti--Detection-Enabled-purple?style=for-the-badge" alt="Anti-Detection"></a>
+  <a href="#-anti--detection"><img src="https://img.shields.io/badge/Anti--Detection-2026-purple?style=for-the-badge" alt="Anti-Detection"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License"></a>
 </p>
 
 <p align="center">
-  <em>A powerful TikTok OSINT tool that performs comprehensive reconnaissance without API keys.<br>
-  Features modern GUI, anti-detection mechanisms, and multi-language scam detection.</em>
+  <em>Enterprise-grade TikTok OSINT platform with CAPTCHA bypass, anti-detection,<br>
+  real-time monitoring, and tactical command center GUI. No API keys required.</em>
 </p>
 
 ---

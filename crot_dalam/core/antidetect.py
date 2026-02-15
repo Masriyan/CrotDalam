@@ -56,32 +56,70 @@ class FingerprintProfile:
     
     @classmethod
     def random(cls) -> "FingerprintProfile":
-        """Generate a random realistic fingerprint."""
+        """Generate a random realistic fingerprint (2026-era)."""
         viewports = [
+            # Standard displays
             (1920, 1080), (1366, 768), (1440, 900), (1536, 864),
-            (1280, 720), (1600, 900), (2560, 1440), (1280, 800),
+            (1280, 720), (1600, 900), (1280, 800),
+            # High-DPI / Retina
+            (2560, 1440), (2560, 1600), (3840, 2160),
+            # Ultrawide
+            (3440, 1440), (2560, 1080),
+            # Surface / MacBook
+            (2736, 1824), (2880, 1800), (3024, 1964),
+            # Common laptop
+            (1920, 1200), (2256, 1504),
         ]
         timezones = [
             "Asia/Jakarta", "Asia/Singapore", "Asia/Bangkok", "Asia/Manila",
-            "America/New_York", "America/Los_Angeles", "Europe/London",
+            "America/New_York", "America/Los_Angeles", "America/Chicago",
+            "Europe/London", "Europe/Berlin", "Europe/Paris",
             "Asia/Tokyo", "Asia/Seoul", "Australia/Sydney",
+            "Asia/Ho_Chi_Minh", "Asia/Kuala_Lumpur",
         ]
-        locales = ["en-US", "en-GB", "id-ID", "th-TH", "vi-VN", "fil-PH", "ms-MY"]
+        locales = [
+            "en-US", "en-GB", "en-AU", "id-ID", "th-TH",
+            "vi-VN", "fil-PH", "ms-MY", "ja-JP", "ko-KR",
+        ]
         platforms = ["Win32", "MacIntel", "Linux x86_64"]
         webgl_configs = [
-            ("Google Inc. (NVIDIA)", "ANGLE (NVIDIA, NVIDIA GeForce GTX 1080 Ti Direct3D11)"),
-            ("Google Inc. (Intel)", "ANGLE (Intel, Intel(R) UHD Graphics 630 Direct3D11)"),
-            ("Google Inc. (AMD)", "ANGLE (AMD, AMD Radeon RX 580 Series Direct3D11)"),
-            ("Apple Inc.", "Apple M1 Pro"),
-            ("Intel Inc.", "Intel Iris OpenGL Engine"),
+            # NVIDIA
+            ("Google Inc. (NVIDIA)", "ANGLE (NVIDIA, NVIDIA GeForce RTX 4090 Direct3D11 vs_5_0 ps_5_0)"),
+            ("Google Inc. (NVIDIA)", "ANGLE (NVIDIA, NVIDIA GeForce RTX 4070 Ti Direct3D11 vs_5_0 ps_5_0)"),
+            ("Google Inc. (NVIDIA)", "ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 Direct3D11 vs_5_0 ps_5_0)"),
+            ("Google Inc. (NVIDIA)", "ANGLE (NVIDIA, NVIDIA GeForce RTX 3060 Direct3D11 vs_5_0 ps_5_0)"),
+            # Intel
+            ("Google Inc. (Intel)", "ANGLE (Intel, Intel(R) UHD Graphics 770 Direct3D11 vs_5_0 ps_5_0)"),
+            ("Google Inc. (Intel)", "ANGLE (Intel, Intel(R) Iris(R) Xe Graphics Direct3D11 vs_5_0 ps_5_0)"),
+            ("Google Inc. (Intel)", "ANGLE (Intel, Intel(R) Arc(TM) A770 Graphics Direct3D11 vs_5_0 ps_5_0)"),
+            # AMD
+            ("Google Inc. (AMD)", "ANGLE (AMD, AMD Radeon RX 7900 XTX Direct3D11 vs_5_0 ps_5_0)"),
+            ("Google Inc. (AMD)", "ANGLE (AMD, AMD Radeon RX 7600 Direct3D11 vs_5_0 ps_5_0)"),
+            # Apple
+            ("Apple", "Apple M3 Pro"),
+            ("Apple", "Apple M2 Max"),
+            ("Apple", "Apple M1 Pro"),
+            # Linux Mesa
+            ("Mesa", "Mesa Intel(R) Arc(TM) Graphics (DG2)"),
         ]
         user_agents = [
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
-            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+            # Chrome 131-132 (Windows)
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            # Chrome 131-132 (Mac)
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+            # Chrome 131-132 (Linux)
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+            # Firefox 134 (Windows/Mac/Linux)
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:134.0) Gecko/20100101 Firefox/134.0",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 14.0; rv:134.0) Gecko/20100101 Firefox/134.0",
+            "Mozilla/5.0 (X11; Linux x86_64; rv:134.0) Gecko/20100101 Firefox/134.0",
+            # Safari 18 (Mac)
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.2 Safari/605.1.15",
+            # Edge 131 (Windows)
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0",
         ]
         
         vw, vh = random.choice(viewports)
@@ -361,6 +399,7 @@ class AntiDetect:
             
             # Add scripts to modify navigator properties
             context.add_init_script(f"""
+                // --- Navigator property spoofing ---
                 Object.defineProperty(navigator, 'platform', {{
                     get: () => '{fp.platform}'
                 }});
@@ -373,13 +412,88 @@ class AntiDetect:
                     get: () => ['{fp.locale}', 'en']
                 }});
                 
-                // WebGL fingerprint spoofing
+                // Hide webdriver flag
+                Object.defineProperty(navigator, 'webdriver', {{
+                    get: () => false
+                }});
+                
+                // Spoof hardware concurrency (realistic range)
+                Object.defineProperty(navigator, 'hardwareConcurrency', {{
+                    get: () => [4, 8, 12, 16][Math.floor(Math.random() * 4)]
+                }});
+                
+                // Spoof device memory
+                Object.defineProperty(navigator, 'deviceMemory', {{
+                    get: () => [4, 8, 16, 32][Math.floor(Math.random() * 4)]
+                }});
+                
+                // --- WebGL fingerprint spoofing ---
                 const getParameter = WebGLRenderingContext.prototype.getParameter;
                 WebGLRenderingContext.prototype.getParameter = function(parameter) {{
                     if (parameter === 37445) return '{fp.webgl_vendor}';
                     if (parameter === 37446) return '{fp.webgl_renderer}';
                     return getParameter.call(this, parameter);
                 }};
+                
+                // WebGL2 spoofing
+                if (typeof WebGL2RenderingContext !== 'undefined') {{
+                    const getParam2 = WebGL2RenderingContext.prototype.getParameter;
+                    WebGL2RenderingContext.prototype.getParameter = function(parameter) {{
+                        if (parameter === 37445) return '{fp.webgl_vendor}';
+                        if (parameter === 37446) return '{fp.webgl_renderer}';
+                        return getParam2.call(this, parameter);
+                    }};
+                }}
+                
+                // --- Canvas noise injection (anti-fingerprinting) ---
+                const origToDataURL = HTMLCanvasElement.prototype.toDataURL;
+                HTMLCanvasElement.prototype.toDataURL = function(type) {{
+                    const ctx = this.getContext('2d');
+                    if (ctx) {{
+                        const imageData = ctx.getImageData(0, 0, this.width, this.height);
+                        const pixels = imageData.data;
+                        // Add subtle noise to random pixels
+                        for (let i = 0; i < pixels.length; i += 4) {{
+                            if (Math.random() < 0.01) {{ // 1% of pixels
+                                pixels[i] = Math.max(0, Math.min(255, pixels[i] + (Math.random() * 4 - 2) | 0));   // R
+                                pixels[i+1] = Math.max(0, Math.min(255, pixels[i+1] + (Math.random() * 4 - 2) | 0)); // G
+                                pixels[i+2] = Math.max(0, Math.min(255, pixels[i+2] + (Math.random() * 4 - 2) | 0)); // B
+                            }}
+                        }}
+                        ctx.putImageData(imageData, 0, 0);
+                    }}
+                    return origToDataURL.apply(this, arguments);
+                }};
+                
+                // --- AudioContext fingerprint spoofing ---
+                if (typeof AudioContext !== 'undefined') {{
+                    const origGetChannelData = AudioBuffer.prototype.getChannelData;
+                    AudioBuffer.prototype.getChannelData = function(channel) {{
+                        const data = origGetChannelData.call(this, channel);
+                        // Add imperceptible noise
+                        for (let i = 0; i < data.length; i += 100) {{
+                            data[i] += (Math.random() * 0.00001 - 0.000005);
+                        }}
+                        return data;
+                    }};
+                }}
+                
+                // --- Chrome runtime spoofing ---
+                if (!window.chrome) {{
+                    window.chrome = {{
+                        runtime: {{}},
+                        loadTimes: function() {{}},
+                        csi: function() {{}},
+                    }};
+                }}
+                
+                // --- Permissions API spoofing ---
+                const originalQuery = window.navigator.permissions.query;
+                window.navigator.permissions.query = (parameters) => (
+                    parameters.name === 'notifications' ?
+                        Promise.resolve({{ state: Notification.permission }}) :
+                        originalQuery(parameters)
+                );
             """)
         except Exception:
             pass  # Silently fail if fingerprint spoofing not possible
@@ -515,6 +629,14 @@ class AntiDetect:
             self.thinking_pause()
             self._session_start = time.time()
     
+    def rotate_identity(self) -> None:
+        """Rotate fingerprint + proxy in one call for identity reset."""
+        self._fingerprint = FingerprintProfile.random()
+        if self.proxies:
+            self.get_next_proxy()
+        self._action_count = 0
+        self._session_start = time.time()
+    
     def should_take_break(self) -> bool:
         """Determine if a break should be taken based on activity."""
         session_duration = time.time() - self._session_start
@@ -561,21 +683,24 @@ class AntiDetect:
 def create_antidetect(
     aggressive: bool = False,
     proxy_list: Optional[List[str]] = None,
+    session_dir: Optional[Path] = None,
 ) -> AntiDetect:
     """Create an AntiDetect instance with common configurations."""
     if aggressive:
         return AntiDetect(
-            min_delay=0.5,  # Reduced from 1.0
-            max_delay=3.0,  # Reduced from 5.0
+            min_delay=0.5,
+            max_delay=3.0,
             mouse_speed=0.7,
             enable_fingerprint_rotation=True,
             proxy_list=proxy_list,
+            session_dir=session_dir,
         )
     else:
         return AntiDetect(
-            min_delay=0.1,  # Reduced from 0.3
-            max_delay=1.0,  # Reduced from 2.0
+            min_delay=0.1,
+            max_delay=1.0,
             mouse_speed=1.5,
             enable_fingerprint_rotation=False,
             proxy_list=proxy_list,
+            session_dir=session_dir,
         )
