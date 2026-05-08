@@ -1,26 +1,37 @@
-```gitignore
+```
 # Dependencies
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-
-# Testing
+.pytest_cache/
+.mypy_cache/
 .coverage
 coverage/
 htmlcov/
-.pytest_cache/
-.mypy_cache/
 
-# Environment
-.env
-.env.local
-*.env.*
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # Logs
 *.log
 
-# IDE
+# Environment variables
+.env
+.env.local
+*.env.*
+
+# Editors
 .vscode/
 .idea/
 *.swp
