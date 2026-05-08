@@ -36,11 +36,9 @@ dist/
 .idea/
 *.swp
 *.swo
-*~
-.DS_Store
-Thumbs.db
 
-# Testing
-.tests/
-.test_results/
+# Build/dist
+dist/
+build/
+*.egg-info/
 ```
