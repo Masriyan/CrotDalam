@@ -1,0 +1,33 @@
+```gitignore
+# Dependencies
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Testing
+.coverage
+coverage/
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build/dist
+dist/
+build/
+*.egg-info/
+```
