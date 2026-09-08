@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crotdalam"
+version = "0.3.0"
+description = "Offline TikTok evidence collection, analysis and forensic reporting"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "Masriyan" }]
+keywords = ["osint", "forensics", "tiktok", "har", "evidence", "reporting"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Information Technology",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+]
+
+# Required at runtime by the offline collectors, analyzers and storage layer.
+dependencies = [
+    "beautifulsoup4>=4.12",   # crotdalam.collectors.hydration
+    "networkx>=3.0",          # crotdalam.analyzers.network
+    "regex>=2023.0",          # crotdalam.search.fuzzy / .regex (timeout= support)
+    "cryptography>=42.0",     # crotdalam.utils.crypto (AES-256-GCM at rest)
+]
+
+[project.optional-dependencies]
+pdf = ["reportlab>=4.0"]          # crotdalam.reports.pdf_report
+dev = ["coverage>=7.0", "pyflakes>=3.0"]
+all = ["crotdalam[pdf,dev]"]
+
+[project.urls]
+Homepage = "https://github.com/Masriyan/CrotDalam"
+Issues = "https://github.com/Masriyan/CrotDalam/issues"
+
+[project.scripts]
+crotdalam = "crotdalam.ui.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["crotdalam*"]
+
+[tool.coverage.run]
+branch = true
+source = ["crotdalam"]

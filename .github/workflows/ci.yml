@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[pdf,dev]"
+
+      - name: Lint
+        run: python -m pyflakes crotdalam/
+
+      - name: Test
+        run: python -m coverage run -m unittest discover -s tests -v
+
+      - name: Coverage
+        run: python -m coverage report --include="crotdalam/*"
+
+      - name: Verify the package imports when installed
+        run: |
+          cd /tmp
+          python -c "import crotdalam; print(crotdalam.__version__)"
+
+      - name: Verify offline commands
+        run: |
+          crotdalam --help
+          crotdalam config show
+          crotdalam session list
+
+      - name: Verify unavailable commands fail cleanly, not with a traceback
+        run: |
+          set +e
+          out=$(crotdalam search --keyword test 2>&1); status=$?
+          set -e
+          echo "$out"
+          [ "$status" -eq 1 ] || { echo "expected exit 1, got $status"; exit 1; }
+          case "$out" in *Traceback*) echo "leaked a traceback"; exit 1 ;; esac
+          case "$out" in *import-har*) ;; *) echo "missing guidance"; exit 1 ;; esac
+
+  no-evidence-committed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject captures, databases and exports in the tree
+        run: |
+          found=$(git ls-files | grep -Ei '\.(har|sqlite|sqlite3|db)$' || true)
+          if [ -n "$found" ]; then
+            echo "Evidence files must never be committed:"; echo "$found"; exit 1
+          fi
+          echo "No evidence files tracked."

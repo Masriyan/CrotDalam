@@ -1,0 +1,33 @@
+*.har
+.env
+.env.*
+!.env.example
+*secrets*
+*.key
+*.pem
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+__pycache__/
+.pytest_cache/
+
+# Build, packaging and tooling artifacts
+build/
+dist/
+*.egg-info/
+.coverage
+.coverage.*
+htmlcov/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+
+# Generated evidence, exports, caches and logs
+data/db/
+data/exports/
+data/cache/
+data/logs/
